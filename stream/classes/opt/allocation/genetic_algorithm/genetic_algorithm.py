@@ -5,6 +5,7 @@ from deap import algorithms
 from deap import base
 from deap import creator
 from deap import tools
+import multiprocessing
 
 import array
 import random
@@ -23,7 +24,9 @@ class GeneticAlgorithm:
         num_generations=250,
         num_individuals=64,
         pop=[],
+        core_pool=None,
     ) -> None:
+        self.pool = core_pool # pool used for multiprocessing
         self.num_generations = num_generations  # number of generations
         self.num_individuals = (
             num_individuals  # number of individuals in initial generation
@@ -122,6 +125,11 @@ class GeneticAlgorithm:
         )
         # stats.register("saved", self.save_population)
 
+        # Using multiprocessing to speed up the evaluation of the fitness function
+        if(self.pool != None):
+            self.toolbox.register("map", self.pool.map)
+            logging.info("Using multiprocessing for fitness evaluation")
+
         logbook = algorithms.eaMuPlusLambda(
             self.pop,
             self.toolbox,
@@ -133,6 +141,10 @@ class GeneticAlgorithm:
             stats=stats,
             halloffame=self.hof,
         )
+
+        # multiprocessing pool no longer needed
+        if(self.pool != None):
+            self.pool.close()
 
         # latency = []
         # buffer_size = []

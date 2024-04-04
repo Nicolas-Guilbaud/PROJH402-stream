@@ -62,6 +62,8 @@ class InterCoreMappingStage(Stage):
         self.operands_to_prefetch = operands_to_prefetch
         self.scheduling_order = kwargs.get("scheduling_order", None)
 
+        self.core_pool = kwargs.get("core_pool",None)
+
         # Determine the set of all (layer, group) combinations to be allocated separately
         self.layer_groups = sorted(
             set((n.id[0], n.group) for n in self.workload.nodes())
@@ -154,6 +156,7 @@ class InterCoreMappingStage(Stage):
                 self.valid_allocations,
                 self.nb_generations,
                 self.nb_individuals,
+                core_pool=self.core_pool,
             )
             # Run the genetic algorithm and get the results
             pop, hof = self.genetic_algorithm.run()

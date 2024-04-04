@@ -44,6 +44,23 @@ nb_ga_generations = 16  # number of genetic algorithm generations
 node_hw_performances_path = f"outputs/{node_hw_cost_pkl_name}.pickle"
 #################################
 
+###########################GA-ACCELERATION###########################
+# handles external run of the script (see runtime_measures.py)
+try:
+    from __main__ import core_pool
+except ImportError:
+    core_pool = None
+
+if __name__ == "__main__":
+
+    # Initialize the core pool for multiprocessing.
+    # Must be performed under the if __name__ == "__main__" condition
+
+    # import multiprocessing
+    # cpus = multiprocessing.cpu_count()
+    # core_pool = multiprocessing.Pool(cpus)
+    pass
+#####################################################################
 
 mainstage = MainStage(
     [  # Initializes the MainStage as entry point
@@ -69,6 +86,7 @@ mainstage = MainStage(
     hint_loops=hint_loops,
     scheduler_candidate_selection="memory",
     operands_to_prefetch=["W"],
+    core_pool=core_pool,
 )
 
 # Launch the MainStage

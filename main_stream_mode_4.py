@@ -66,6 +66,24 @@ timeline_fig_path_matplotlib = f"outputs/{experiment_id}-schedule.png"
 memory_fig_path = f"outputs/{experiment_id}-memory.png"
 #####################################################################
 
+###########################GA-ACCELERATION###########################
+# handles external run of the script (see runtime_measures.py)
+try:
+    from __main__ import core_pool
+except ImportError:
+    core_pool = None
+
+if __name__ == "__main__":
+
+    # Initialize the core pool for multiprocessing.
+    # Must be performed under the if __name__ == "__main__" condition
+
+    # import multiprocessing
+    # cpus = multiprocessing.cpu_count()
+    # core_pool = multiprocessing.Pool(cpus)
+    pass
+#####################################################################
+
 mainstage = MainStage(
     [  # Initializes the MainStage as entry point
         AcceleratorParserStage,  # Parses the accelerator
@@ -91,6 +109,7 @@ mainstage = MainStage(
     split_W_percentage=split_W_percentage,
     scheduler_candidate_selection="memory",
     operands_to_prefetch=[],
+    core_pool=core_pool,
 )
 
 # Launch the MainStage
