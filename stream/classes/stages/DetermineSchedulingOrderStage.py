@@ -23,8 +23,13 @@ class DetermineSchedulingOrderStage(Stage):
         self.workload = workload
         self.layer_stacks = kwargs.get("layer_stacks", None)  # optional
         self.scheduling_order = None
+        self.metrics = kwargs.get("metrics",None)
 
     def run(self):
+
+        if self.metrics:
+            self.metrics.start(self)
+
         # TODO: Take into account the layer stacks
         if self.layer_stacks:
             logger.warn("Scheduling order for layer stacks not implemented.")
@@ -32,7 +37,6 @@ class DetermineSchedulingOrderStage(Stage):
         # We give higher priority to nodes deeper in the graph
         self.scheduling_order = sorted((n.id for n in self.workload.nodes()), reverse=True)
         
-
         self.kwargs["accelerator"] = self.accelerator
         self.kwargs["workload"] = self.workload
         self.kwargs["scheduling_order"] = self.scheduling_order
@@ -40,6 +44,9 @@ class DetermineSchedulingOrderStage(Stage):
             self.list_of_callables[1:],
             **self.kwargs,
         )
+        if self.metrics:
+            self.metrics.stop(self)
+        
         for cme, extra_info in sub_stage.run():
             yield cme, extra_info
 

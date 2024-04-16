@@ -1,8 +1,9 @@
 from time import time
-from os import getcwd, listdir, path, makedirs
+from os import getcwd, listdir, path, makedirs, pardir
 import importlib
 import matplotlib.pyplot as plt
 import multiprocessing
+from sys import path as sys_path
 
 '''
 runtime_measures.py
@@ -13,8 +14,18 @@ It serves to show the improvements made.
 '''
 
 # Getting files to run
-data = [i.removesuffix('.py') for i in listdir(getcwd()) if i.startswith('main') and i.endswith('.py')]
+input_folder = getcwd()
+if input_folder not in sys_path:
+    sys_path.append(input_folder)
+
+data = [i.removesuffix('.py') for i in listdir(input_folder) if i.startswith('main') and i.endswith('.py')]
 output_folder = getcwd()+'/outputs/runtime'
+
+def par_dir():
+    """
+    Get the parent directory of the current working directory.
+    """
+    return path.abspath(path.join(getcwd(), pardir))
 
 def take_measure(file):
     """

@@ -43,6 +43,7 @@ class CustomSpatialMappingGeneratorStage(Stage):
         self.accelerator = accelerator
         self.check_layer(layer)
         self.layer = layer
+        self.metrics = kwargs.get("metrics",None)
 
     @staticmethod
     def check_layer(layer):
@@ -65,6 +66,8 @@ class CustomSpatialMappingGeneratorStage(Stage):
         Run this stage by generating user-formatted spatial mappings which are converted
         to the memory-level based spatial mapping representation.
         """
+        if self.metrics:
+            self.metrics.start(self)
         user_provided_spatial_mappings = self.layer.user_spatial_mapping
         if isinstance(user_provided_spatial_mappings, dict):
             user_spatial_mappings = [user_provided_spatial_mappings]
@@ -89,6 +92,9 @@ class CustomSpatialMappingGeneratorStage(Stage):
             )
             for cme, extra_info in spatial_mapping_conversion_stage.run():
                 yield cme, (user_spatial_mapping, extra_info)
+        
+        if self.metrics:
+            self.metrics.stop(self)
 
     def generate_user_spatial_mappings(self):
         """

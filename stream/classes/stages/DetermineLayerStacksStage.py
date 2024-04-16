@@ -26,6 +26,7 @@ class DetermineLayerStacksStage(Stage):
         self.mode = kwargs.get("mode")
         self.stack_cutoff = kwargs.get("stack_cutoff", None)
         self.stack_cutoffs = kwargs.get("stack_cutoffs", None)
+        self.metrics = kwargs.get("metrics",None)
 
         # Get the weight capacity of all cores
         weight_capacities = {}
@@ -41,6 +42,10 @@ class DetermineLayerStacksStage(Stage):
         self.total_weight_capacity = sum(weight_capacities.values())
 
     def run(self):
+
+        if self.metrics:
+            self.metrics.start(self)
+
         if self.mode == "fused":
             if self.layer_stacks is None: 
                 if self.stack_cutoff is not None:
@@ -63,6 +68,9 @@ class DetermineLayerStacksStage(Stage):
             self.list_of_callables[1:],
             **self.kwargs,
         )
+        if self.metrics:
+            self.metrics.stop(self)
+
         for cme, extra_info in sub_stage.run():
             yield cme, extra_info
 

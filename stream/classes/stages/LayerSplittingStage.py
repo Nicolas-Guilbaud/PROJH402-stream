@@ -28,6 +28,7 @@ class LayerSplittingStage(Stage):
         self.accelerator = accelerator
         self.onnx_model = onnx_model
         self.workload = workload
+        self.metrics = kwargs.get("metrics",None)
 
         # Set the required kwarg attributes
         self.split_onnx_model_path = None
@@ -105,6 +106,10 @@ class LayerSplittingStage(Stage):
         self.weight_size_bits = top_level.memory_instance.size
 
     def run(self):
+
+        if self.metrics:
+            self.metrics.start(self)
+
         for workload_node in self.workload.nodes():
             if workload_node.type == "conv" or workload_node.type == "gemm":
                 try:
@@ -159,6 +164,9 @@ class LayerSplittingStage(Stage):
             workload_path=self.split_onnx_model_path,
             **self.kwargs,
         )
+        if self.metrics:
+            self.metrics.stop(self)
+    
         for cme, extra_info in sub_stage.run():
             yield cme, extra_info
         # yield None, None

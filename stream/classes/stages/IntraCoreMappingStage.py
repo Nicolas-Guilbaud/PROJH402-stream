@@ -39,6 +39,7 @@ class IntraCoreMappingStage(Stage):
         self.loma_lpf_limit = loma_lpf_limit
         self.loma_show_progress_bar = kwargs.get("loma_show_progress_bar", False)
         self.node_hw_performances_path = kwargs.get("node_hw_performances_path", None)
+        self.metrics = kwargs.get("metrics",None)
 
         # Extract all unique nodes that will have to be evaluated
         self.unique_nodes = []
@@ -78,6 +79,10 @@ class IntraCoreMappingStage(Stage):
         }  # look-up table
 
     def run(self):
+
+        if self.metrics:
+            self.metrics.start(self)
+
         logger.info(f"Start IntraCoreMappingStage.")
         if self.node_hw_performances_path:
             try:
@@ -180,6 +185,9 @@ class IntraCoreMappingStage(Stage):
 
         logger.info(f"Finished IntraCoreMappingStage.")
         sub_stage = self.list_of_callables[0](self.list_of_callables[1:], **kwargs)
+        if self.metrics:
+            self.metrics.stop(self)
+        
         for cme, extra_info in sub_stage.run():
             yield cme, extra_info
 

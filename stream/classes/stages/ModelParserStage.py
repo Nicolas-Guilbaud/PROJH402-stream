@@ -19,8 +19,13 @@ class ONNXModelParserStage(Stage):
         self.onnx_model_parser = ONNXModelParser(
             workload_path, mapping_path, accelerator
         )
+        self.metrics = kwargs.get("metrics",None)
 
     def run(self) -> Generator:
+
+        if self.metrics:
+            self.metrics.start(self)
+
         self.onnx_model_parser.run()
         onnx_model = self.onnx_model_parser.get_onnx_model()
         workload = self.onnx_model_parser.get_workload()
@@ -33,6 +38,10 @@ class ONNXModelParserStage(Stage):
             workload=workload,
             **self.kwargs,
         )
+
+        if self.metrics:
+            self.metrics.stop(self)
+
         for cme, extra_info in sub_stage.run():
             yield cme, extra_info
 
@@ -78,8 +87,13 @@ class UserDefinedModelParserStage(Stage):
         self.workload_path = workload_path
         self.mapping_path = mapping_path
         self.accelerator = accelerator
+        self.metrics = kwargs.get("metrics",None)
 
     def run(self) -> Generator:
+
+        if self.metrics:
+            self.metrics.start(self)
+
         workload = parse_workload_from_path(
             self.workload_path, self.mapping_path, self.accelerator
         )
@@ -88,5 +102,8 @@ class UserDefinedModelParserStage(Stage):
         sub_stage = self.list_of_callables[0](
             self.list_of_callables[1:], workload=workload, **self.kwargs
         )
+        if self.metrics:
+            self.metrics.stop(self)
+        
         for cme, extra_info in sub_stage.run():
             yield cme, extra_info

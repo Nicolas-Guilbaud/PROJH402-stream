@@ -25,8 +25,13 @@ class DetermineHintLoopsStage(Stage):
         self.layer_stacks = layer_stacks
         self.mode = kwargs.get("mode")
         self.hint_loops = kwargs.get("hint_loops", None)
+        self.metrics = kwargs.get("metrics",None)
 
     def run(self):
+
+        if self.metrics:
+            self.metrics.start(self)
+
         if self.mode == "fused":
             if self.hint_loops is None: 
                 self.hint_loops = self.get_hint_loops_fused()
@@ -47,6 +52,9 @@ class DetermineHintLoopsStage(Stage):
             self.list_of_callables[1:],
             **self.kwargs,
         )
+        if self.metrics:
+            self.metrics.stop(self)
+        
         for cme, extra_info in sub_stage.run():
             yield cme, extra_info
 

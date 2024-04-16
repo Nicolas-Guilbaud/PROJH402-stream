@@ -23,6 +23,7 @@ from stream.classes.opt.splitting.splitting import (
 )
 
 import logging
+from measures.internal_measure import RuntimeMeter
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +57,8 @@ class GenerateCNWorkloadHybridStage(Stage):
         # Memoize the numpy tensors for dependency generation
         self.numpy_tensors = {}
 
+        self.metrics = kwargs.get("metrics",None)
+
         # for CN node size case study, will be used in the function of get_outer_tmap_loop_dimensions
         if cn_define_mode not in [1, 2, 3, 4]:
             raise ValueError(f"cn_define_mode can not be {self.cn_define_mode}.")
@@ -76,6 +79,8 @@ class GenerateCNWorkloadHybridStage(Stage):
             self.layer_split_factors_k = self.get_layer_split_factors_k()
 
     def run(self):
+        if self.metrics:
+            self.metrics.start(self)
         unique_finer_nodes = []
         # For each node get all the finer nodes and set the intra edges
         G = nx.DiGraph()
@@ -130,6 +135,10 @@ class GenerateCNWorkloadHybridStage(Stage):
         if "scheduling_order" not in kwargs:
             kwargs["scheduling_order"] = self.get_scheduling_order(G)
         sub_stage = self.list_of_callables[0](self.list_of_callables[1:], **kwargs)
+
+        if self.metrics:
+            self.metrics.stop(self)
+
         for cme, extra_info in sub_stage.run():
             yield cme, extra_info
 

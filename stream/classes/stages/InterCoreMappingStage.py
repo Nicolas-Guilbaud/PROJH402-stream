@@ -62,6 +62,7 @@ class InterCoreMappingStage(Stage):
         self.operands_to_prefetch = operands_to_prefetch
         self.scheduling_order = kwargs.get("scheduling_order", None)
 
+        self.metrics = kwargs.get("metrics",None)
         self.core_pool = kwargs.get("core_pool",None)
 
         # Determine the set of all (layer, group) combinations to be allocated separately
@@ -131,6 +132,9 @@ class InterCoreMappingStage(Stage):
         - if no: initialize and run the genetic algorithm
         """
 
+        if self.metrics:
+            self.metrics.start(self)
+
         logger.info(f"Start InterCoreMappingStage.")
         if self.individual_length == 0:
             logger.info(f"Evaluating fixed layer-core allocation.")
@@ -175,6 +179,8 @@ class InterCoreMappingStage(Stage):
                     """
             yield scme, None
         logger.info(f"Finished InterCoreMappingStage.")
+        if self.metrics:
+            self.metrics.stop(self)
 
     def set_hw_performance_non_flexible_nodes(self):
         """Set the energy, runtime and core_allocation of the nodes in self.workload that only have a single possible core allocation."""
