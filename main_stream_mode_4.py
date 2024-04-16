@@ -7,6 +7,7 @@ from stream.visualization.schedule import (
 from stream.visualization.memory_usage import plot_memory_usage
 import re
 import pickle
+import multiprocessing as mp
 
 # Initialize the logger
 import logging as _logging
@@ -78,64 +79,65 @@ if __name__ == "__main__":
     # Initialize the core pool for multiprocessing.
     # Must be performed under the if __name__ == "__main__" condition
 
-    # import multiprocessing
-    # cpus = multiprocessing.cpu_count()
-    # core_pool = multiprocessing.Pool(cpus)
+    # cpus = mp.cpu_count()
+    # core_pool = mp.Pool(cpus)
     pass
 #####################################################################
 
-mainstage = MainStage(
-    [  # Initializes the MainStage as entry point
-        AcceleratorParserStage,  # Parses the accelerator
-        StreamONNXModelParserStage,  # Parses the ONNX Model into the workload
-        # UserDefinedModelParserStage,  # Parses the user-defined Model into the workload
-        GenerateCNWorkloadHybridStage,
-        IntraCoreMappingStage,
-        InterCoreMappingStage,
-    ],
-    accelerator=accelerator,  # required by AcceleratorParserStage
-    workload_path=workload_path,  # required by ModelParserStage
-    mapping_path=mapping_path,  # required by ModelParserStage
-    loma_lpf_limit=6,  # required by LomaStage
-    nb_ga_individuals=nb_ga_individuals,  # number of individuals in each genetic algorithm generation
-    nb_ga_generations=nb_ga_generations,  # number of genetic algorithm generations
-    node_hw_performances_path=node_hw_performances_path,  # saved node_hw_performances to skip re-computation
-    plot_hof=True,  # Save schedule and memory usage plot of each individual in the Genetic Algorithm hall of fame
-    plot_file_name=plot_file_name,
-    plot_full_schedule=plot_full_schedule,
-    plot_data_transfer=plot_data_transfer,
-    cn_define_mode=CN_define_mode,
-    hint_loops=hint_loops,
-    split_W_percentage=split_W_percentage,
-    scheduler_candidate_selection="memory",
-    operands_to_prefetch=[],
-    core_pool=core_pool,
-)
+# Ensure the following is executed only by the main process
+if(mp.current_process().name == 'MainProcess'):
+    mainstage = MainStage(
+        [  # Initializes the MainStage as entry point
+            AcceleratorParserStage,  # Parses the accelerator
+            StreamONNXModelParserStage,  # Parses the ONNX Model into the workload
+            # UserDefinedModelParserStage,  # Parses the user-defined Model into the workload
+            GenerateCNWorkloadHybridStage,
+            IntraCoreMappingStage,
+            InterCoreMappingStage,
+        ],
+        accelerator=accelerator,  # required by AcceleratorParserStage
+        workload_path=workload_path,  # required by ModelParserStage
+        mapping_path=mapping_path,  # required by ModelParserStage
+        loma_lpf_limit=6,  # required by LomaStage
+        nb_ga_individuals=nb_ga_individuals,  # number of individuals in each genetic algorithm generation
+        nb_ga_generations=nb_ga_generations,  # number of genetic algorithm generations
+        node_hw_performances_path=node_hw_performances_path,  # saved node_hw_performances to skip re-computation
+        plot_hof=True,  # Save schedule and memory usage plot of each individual in the Genetic Algorithm hall of fame
+        plot_file_name=plot_file_name,
+        plot_full_schedule=plot_full_schedule,
+        plot_data_transfer=plot_data_transfer,
+        cn_define_mode=CN_define_mode,
+        hint_loops=hint_loops,
+        split_W_percentage=split_W_percentage,
+        scheduler_candidate_selection="memory",
+        operands_to_prefetch=[],
+        core_pool=core_pool,
+    )
 
-# Launch the MainStage
+    # Launch the MainStage
 
-scme, _ = mainstage.run()
-scme = scme[0]
+    scme, _ = mainstage.run()
+    scme = scme[0]
 
-# Save the scme to a pickle file
-with open(scme_path, "wb") as fp:
-    pickle.dump(scme, fp)
+    # Save the scme to a pickle file
+    with open(scme_path, "wb") as fp:
+        pickle.dump(scme, fp)
 
-# Plotting results using Plotly
-visualize_timeline_plotly(
-    scme,
-    draw_dependencies=draw_dependencies,
-    draw_communication=plot_data_transfer,
-    fig_path=timeline_fig_path_plotly,
-)
+    # Plotting results using Plotly
+    visualize_timeline_plotly(
+        scme,
+        draw_dependencies=draw_dependencies,
+        draw_communication=plot_data_transfer,
+        fig_path=timeline_fig_path_plotly,
+    )
 
-# Ploting results using Matplotlib
-plot_timeline_brokenaxes(
-    scme,
-    draw_dependencies,
-    section_start_percent,
-    percent_shown,
-    plot_data_transfer,
-    fig_path=timeline_fig_path_matplotlib,
-)
-plot_memory_usage(scme, section_start_percent, percent_shown, fig_path=memory_fig_path)
+    # Ploting results using Matplotlib
+    plot_timeline_brokenaxes(
+        scme,
+        draw_dependencies,
+        section_start_percent,
+        percent_shown,
+        plot_data_transfer,
+        fig_path=timeline_fig_path_matplotlib,
+    )
+    plot_memory_usage(scme, section_start_percent, percent_shown, fig_path=memory_fig_path)

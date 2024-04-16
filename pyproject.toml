@@ -28,6 +28,7 @@ dependencies = [
     'brokenaxes',
     'plotly',
     'pandas',
+    'multiprocessing'
 ]
 requires-python = ">=3.9"
 
